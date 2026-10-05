@@ -1,0 +1,110 @@
+spring:
+  application:
+    name: bihar-learning-backend
+  datasource:
+    # Point DB_URL at your Supabase PostgreSQL connection string (session or transaction pooler).
+    # No Docker and no local PostgreSQL are required. Example:
+    #   jdbc:postgresql://aws-0-<region>.pooler.supabase.com:6543/postgres?user=postgres.<ref>&sslmode=require
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bihar_learning}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:5}        # free-tier friendly; Supabase pooler-aware
+      minimum-idle: ${DB_POOL_MIN:1}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    # Baseline at 0 so the very first migration (V1__init_schema) is NOT treated as already
+    # applied on a fresh database. With the default baseline-version=1, V1 would be skipped and
+    # V2 (seed) would fail with "relation does not exist".
+    baseline-version: 0
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  cache:
+    # Default to an in-process cache so Redis is OPTIONAL (free-tier friendly). Set CACHE_TYPE=redis
+    # with REDIS_HOST/PORT to use Redis in production.
+    type: ${CACHE_TYPE:simple}
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-stacktrace: never
+    include-message: never
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  security:
+    jwt:
+      # Override in production via env. Base64-encoded 256-bit secret.
+      secret: ${JWT_SECRET:ZGV2LW9ubHktc2VjcmV0LWNoYW5nZS1tZS1pbi1wcm9kdWN0aW9uLTEyMzQ1Ng==}
+      expiry-minutes: ${JWT_EXPIRY_MINUTES:120}
+    admin:
+      # Bootstrap admin for local/dev. Override in production.
+      email: ${ADMIN_EMAIL:admin@bihar-learning.local}
+      password: ${ADMIN_PASSWORD:admin12345}
+  cache:
+    ttl-seconds: ${CACHE_TTL_SECONDS:600}
+  sync:
+    # Live crawling is DISABLED by default (see content-policy.md).
+    enabled: ${SYNC_ENABLED:false}
+    user-agent: "BiharLearningBot/0.1 (+educational; contact=admin@bihar-learning.local)"
+    rate-limit-ms: ${SYNC_RATE_LIMIT_MS:3000}
+    request-timeout-ms: ${SYNC_REQUEST_TIMEOUT_MS:15000}
+    # Conditional-fetch + retry/backoff policy (docs sections 23, 25). Avoids re-downloading
+    # unchanged files and never retries indefinitely.
+    max-concurrent-downloads: ${SYNC_MAX_CONCURRENT:2}
+    max-attempts: ${SYNC_MAX_ATTEMPTS:3}
+    backoff-base-ms: ${SYNC_BACKOFF_BASE_MS:60000}   # 1 min, doubled each attempt
+  ai:
+    enabled: ${AI_ENABLED:false}
+  storage:
+    # Pluggable object storage. SUPABASE uses Supabase Storage; EXTERNAL keeps metadata + links
+    # only (never re-hosts). Switching providers later (S3, R2, GCS) is a config change.
+    provider: ${STORAGE_PROVIDER:EXTERNAL}
+    bucket: ${STORAGE_BUCKET:documents}
+    # Supabase project URL + service role key (server-side only; never expose to the browser).
+    supabase:
+      url: ${SUPABASE_URL:}
+      service-key: ${SUPABASE_SERVICE_KEY:}
+    # Max file size the ingestion pipeline will download/host (bytes). Larger -> external reference.
+    max-host-bytes: ${STORAGE_MAX_HOST_BYTES:52428800}   # 50 MB
+    # Expiry for signed storage URLs handed to the browser.
+    signed-url-expiry-seconds: ${STORAGE_SIGNED_URL_EXPIRY:3600}
+    # Total storage budget for dashboard thresholds. UNKNOWN (0) if the provider quota is not
+    # programmatically confirmed - we never invent a quota (see docs section 42).
+    quota-bytes: ${STORAGE_QUOTA_BYTES:0}
+    warn-threshold-percent: ${STORAGE_WARN_PERCENT:70}
+    critical-threshold-percent: ${STORAGE_CRITICAL_PERCENT:85}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: INFO
+    com.biharlearning: INFO

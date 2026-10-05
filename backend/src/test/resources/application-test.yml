@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:bihar;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  cache:
+    type: simple
+
+app:
+  cors:
+    allowed-origins: http://localhost:3000
+  security:
+    jwt:
+      secret: ZGV2LW9ubHktc2VjcmV0LWNoYW5nZS1tZS1pbi1wcm9kdWN0aW9uLTEyMzQ1Ng==
+      expiry-minutes: 120
+    admin:
+      email: admin@test.local
+      password: testpass123
+  cache:
+    ttl-seconds: 60
+  sync:
+    enabled: false
+    user-agent: "BiharLearningBot-test"
+    rate-limit-ms: 0
+    request-timeout-ms: 5000
+  ai:
+    enabled: false

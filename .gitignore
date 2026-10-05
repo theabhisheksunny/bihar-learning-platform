@@ -1,0 +1,28 @@
+# Environment / secrets
+.env
+*.env.local
+
+# Local machine-specific MCP config (may contain project refs / tokens)
+.kiro/settings/mcp.json
+
+# Backend (Maven / Java)
+backend/target/
+*.class
+*.jar
+*.log
+
+# Frontend (Node / Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/playwright-report/
+frontend/test-results/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
